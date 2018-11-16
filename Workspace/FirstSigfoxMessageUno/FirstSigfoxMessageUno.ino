@@ -3,18 +3,9 @@
  * Date: 2017/03/03
  * Description:
  * This arduino example will show you how to send a Sigfox message
- * using the wisol module and Arduino UNO (https://yadom.fr/carte-breakout-sfm10r1.html)
+ * using the wisol module and the MKR1000 (https://yadom.fr/carte-breakout-sfm10r1.html)
 */
 
-// include the SoftwareSerial library so you can use its functions:
-#include <SoftwareSerial.h>
-
-#define rxPin 10
-#define txPin 11
-
-
-// set up a new serial port
-SoftwareSerial Sigfox =  SoftwareSerial(rxPin, txPin);
 
 //Set to 0 if you don't need to see the messages in the console
 #define DEBUG 1
@@ -26,17 +17,13 @@ uint8_t msg[12];
 void setup() {
   // initialize digital pin LED_BUILTIN as an output.
   pinMode(LED_BUILTIN, OUTPUT);
-
   if(DEBUG){
     Serial.begin(9600);
   }
 
   // open Wisol communication
-   // define pin modes for tx, rx:
-  pinMode(rxPin, INPUT);
-  pinMode(txPin, OUTPUT);
-  Sigfox.begin(9600);
-  delay(100);
+  Serial1.begin(9600);
+  delay(1000);
   getID();
   delay(100);
   getPAC();
@@ -55,14 +42,14 @@ void loop() {
   // 1% of 3600 sec = 36 sec
   // A Sigfox message takes 6 seconds to emit
   // 36 sec / 6 sec = 6 messages per hours -> 1 every 10 minutes
-  delay(60000);
+  delay(1*60*1000);
 }
 
 void blink(){
   digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
   delay(1000);                       // wait for a second
   digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
-  delay(1000);
+  delay(1000);    
 }
 
 //Get Sigfox ID
@@ -70,13 +57,13 @@ String getID(){
   String id = "";
   char output;
 
-  Sigfox.print("AT$I=10\r");
-  while (!Sigfox.available()){
+  Serial1.print("AT$I=10\r");
+  while (!Serial1.available()){
      blink();
   }
 
-  while(Sigfox.available()){
-    output = Sigfox.read();
+  while(Serial1.available()){
+    output = Serial1.read();
     id += output;
     delay(10);
   }
@@ -95,14 +82,14 @@ String getPAC(){
   String pac = "";
   char output;
 
-  Sigfox.print("AT$I=11\r");
-  while (!Sigfox.available()){
+  Serial1.print("AT$I=11\r");
+  while (!Serial1.available()){
      blink();
   }
 
-  while(Sigfox.available()){
-    output = Sigfox.read();
-    pac += output;
+  while(Serial1.available()){
+    output = Serial1.read();
+    pac += "X";
     delay(10);
   }
 
@@ -121,22 +108,22 @@ void sendMessage(uint8_t msg[], int size){
   String status = "";
   char output;
 
-  Sigfox.print("AT$SF=");
+  Serial1.print("AT$SF=");
   for(int i= 0;i<size;i++){
-    Sigfox.print(String(msg[i], HEX));
+    Serial1.print(String(msg[i], HEX));
     if(DEBUG){
       Serial.print("Byte:");
       Serial.println(msg[i], HEX);
     }
   }
 
-  Sigfox.print("\r");
+  Serial1.print("\r");
 
-  while (!Sigfox.available()){
+  while (!Serial1.available()){
      blink();
   }
-  while(Sigfox.available()){
-    output = (char)Sigfox.read();
+  while(Serial1.available()){
+    output = (char)Serial1.read();
     status += output;
     delay(10);
   }
